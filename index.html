@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chickup | Menu & Commande</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#fff8ef;color:#222}
+header{background:#171717;color:white;text-align:center;padding:28px 15px}
+header h1{font-size:38px;color:#ffb52e;margin:0}
+header p{margin-bottom:0}
+main{max-width:850px;margin:auto;padding:15px}
+h2{margin-top:25px}
+.category{background:#171717;color:#ffb52e;padding:12px 15px;border-radius:10px}
+.product{background:white;padding:13px;margin:9px 0;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;box-shadow:0 2px 9px #0000000c}
+.product strong{display:block;margin-bottom:5px}
+.price{color:#c87900;font-weight:bold;white-space:nowrap}
+button{border:0;border-radius:8px;padding:10px 13px;background:#ffb52e;font-weight:bold;cursor:pointer}
+.cart,.order{background:white;border-radius:14px;padding:16px;margin:20px 0;box-shadow:0 2px 12px #0000000d}
+input,textarea{width:100%;padding:13px;margin:7px 0;border:1px solid #ddd;border-radius:8px;font-size:16px}
+.whatsapp{width:100%;background:#20b85a;color:white;font-size:17px;padding:15px}
+.remove{background:#eee}
+footer{text-align:center;background:#171717;color:white;padding:20px}
+</style>
+</head>
+<body>
+<header>
+<h1>CHICKUP 🍔</h1>
+<p>Le goût qui fait la différence !</p>
+<p>Découvrez notre menu et commandez facilement.</p>
+</header>
+
+<main>
+<div id="menu"></div>
+
+<section class="cart">
+<h2>🛒 Votre panier</h2>
+<div id="cart">Votre panier est vide.</div>
+<h3>Total : <span id="total">0</span> DH</h3>
+<button class="remove" onclick="clearCart()">Vider le panier</button>
+</section>
+
+<section class="order">
+<h2>📦 Informations de livraison</h2>
+<input id="name" placeholder="Nom et prénom">
+<input id="phone" type="tel" placeholder="Votre numéro de téléphone">
+<input id="address" placeholder="Adresse de livraison">
+<textarea id="notes" placeholder="Remarques (facultatif)"></textarea>
+<button class="whatsapp" onclick="sendOrder()">Commander sur WhatsApp</button>
+<p><small>Le total affiché correspond aux produits. Les frais de livraison, s'il y en a, sont à confirmer avec le restaurant.</small></p>
+</section>
+</main>
+
+<footer>CHICKUP — Merci pour votre commande ❤️</footer>
+
+<script>
+const menu = [
+["Pizzas",[
+["Pizza Margherita",30],["Pizza Poulet",45],["Pizza Kefta",45],
+["Pizza Thon",42],["Pizza Fruits De Mer",60]]],
+["Chikas",[
+["Chika Escalope",42],["Chika Chawarma",42],["Chika Kefta",42],
+["Chika Mixte",45],["Chika Curry",37]]],
+["Plats",[
+["Plat Chawarma",45],["Plat Curry",45],["Plat Kefta",52],["Plat Mixte",57]]],
+["Tacos Bowls",[
+["Tacos Bowls Chawarma",42],["Tacos Bowls Kefta",45],
+["Tacos Bowls Mixte",52],["Tacos Bowls Escalope",37],["Tacos Bowls Curry",37]]],
+["Tacos",[
+["Tacos Chawarma",45],["Tacos Escalope",45],["Tacos Mixte",52],
+["Tacos Gratiné",57],["Tacos Kefta",48],["Tacos Curry",45]]],
+["Burgers",[
+["Cheese Burger",30],["Chicken Burger",30],["Eggs Burger",37],
+["Double Cheese",42],["Double Chicken",42],["Mixte Burger",45]]],
+["Long Burgers",[
+["Long Burger Kefta",45],["Long Burger Escalope",45],["Long Burger Mixte",52]]],
+["Pasticcios",[["Pasticcio",45]]],
+["Salades",[
+["Salade Niçoise",27],["Salade Ofish",37],["Salade Chickup",45]]],
+["Crêpes",[
+["Crêpe Nutella",22],["Crêpe Banane",27],["Crêpe Oreo",30],
+["Crêpe Lotus",30],["Crêpe Pistache",37]]],
+["Jus",[
+["Jus Citron",18],["Jus D'orange",21],["Jus Banane",22],
+["Jus D'ananas",27],["Jus De Mangue",27],["Jus D'avocat",27]]]
+];
+
+const cart = {};
+
+function renderMenu(){
+ document.getElementById("menu").innerHTML=menu.map((cat,ci)=>`
+ <h2 class="category">${cat[0]}</h2>
+ ${cat[1].map((p,pi)=>`
+ <div class="product">
+   <div><strong>${p[0]}</strong><span class="price">${p[1]} DH</span></div>
+   <button onclick="addItem('${ci}-${pi}')">Ajouter +</button>
+ </div>`).join("")}
+ `).join("");
+}
+
+function findProduct(id){
+ const [ci,pi]=id.split("-").map(Number);
+ return menu[ci][1][pi];
+}
+
+function addItem(id){
+ if(!cart[id])cart[id]={name:findProduct(id)[0],price:findProduct(id)[1],qty:0};
+ cart[id].qty++;
+ renderCart();
+}
+
+function changeQty(id,amount){
+ if(!cart[id])return;
+ cart[id].qty+=amount;
+ if(cart[id].qty<=0)delete cart[id];
+ renderCart();
+}
+
+function renderCart(){
+ const entries=Object.entries(cart);
+ document.getElementById("cart").innerHTML=entries.length
+ ?entries.map(([id,p])=>`
+ <div class="product">
+ <div><strong>${p.name}</strong>${p.price} DH × ${p.qty}
+ <br><span class="price">${p.price*p.qty} DH</span></div>
+ <div><button onclick="changeQty('${id}',-1)">−</button>
+ <button onclick="changeQty('${id}',1)">+</button></div>
+ </div>`).join("")
+ :"Votre panier est vide.";
+
+ document.getElementById("total").textContent=
+ entries.reduce((sum,[id,p])=>sum+p.price*p.qty,0);
+}
+
+function clearCart(){
+ Object.keys(cart).forEach(id=>delete cart[id]);
+ renderCart();
+}
+
+function sendOrder(){
+ const name=document.getElementById("name").value.trim();
+ const phone=document.getElementById("phone").value.trim();
+ const address=document.getElementById("address").value.trim();
+ const notes=document.getElementById("notes").value.trim();
+ const entries=Object.values(cart);
+
+ if(!entries.length){alert("Ajoutez un produit à votre panier.");return;}
+ if(!name||!phone||!address){
+ alert("Veuillez remplir votre nom, téléphone et adresse.");return;
+ }
+
+ const total=entries.reduce((sum,p)=>sum+p.price*p.qty,0);
+ let msg="🍔 *Nouvelle commande Chickup*%0A%0A";
+ msg+="*Nom:* "+encodeURIComponent(name)+"%0A";
+ msg+="*Téléphone:* "+encodeURIComponent(phone)+"%0A";
+ msg+="*Adresse:* "+encodeURIComponent(address)+"%0A%0A";
+ msg+="*Commande:*%0A";
+
+ entries.forEach(p=>{
+ msg+="- "+encodeURIComponent(p.name)+" x"+p.qty+
+ " = "+(p.price*p.qty)+" DH%0A";
+ });
+
+ msg+="%0A*Total produits: "+total+" DH*";
+ if(notes)msg+="%0A*Remarques:* "+encodeURIComponent(notes);
+
+ // تأكد من رقم WhatsApp ديال المطعم قبل النشر
+ const whatsappNumber="212609807045";
+ window.location.href="https://wa.me/"+whatsappNumber+"?text="+msg;
+}
+
+renderMenu();
+renderCart();
+</script>
+</body>
+</html>
